@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args": ["-v", "2", "-f", "z",  "Sabnzbd/Sabnzbd"]
+            "args": ["-v", "2", "-d", "1", "-f", "z",  "Sabnzbd/Sabnzbd"]
         }
     ]
 }

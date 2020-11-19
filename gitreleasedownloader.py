@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-# File name: format.py
+# Project: Git Release Downloader
+# File name: gitreleasedownloader.py
 # Description: Basic format for Python scripts
-# Author: Louis de Bruijn
-# Date: 19-05-2020
+# Author: David Campillo
+# Date: 19-11-2020
 
 import sys
 import argparse
@@ -21,6 +22,7 @@ def parse_arguments():
     parser.add_argument('-v', metavar='verbosity', type=int, default=3,
         help='Verbosity of logging: 0 -critical, 1- error, 2 -warning, 3 -info, 4 -debug')
     parser.add_argument("-f", metavar="format", type=str, default='z', help='Format of the downloaded file : t = Tarball, z = Zip (default)')
+    parser.add_argument("-d", metavar="debug", type=bool, default=False, help='Debug mode -> skip download the file')
 
     args = parser.parse_args()
     verbose = {0: logging.CRITICAL, 1: logging.ERROR, 2: logging.WARNING, 3: logging.INFO, 4: logging.DEBUG}
@@ -53,7 +55,7 @@ class RepoDownloadManager:
                 exit()
         except Exception as e:
             error("General error" + str(e))
-#error(str(e))
+
 
     def __get_fileextension(self, DownloadFormat):
         switcher={
@@ -100,10 +102,11 @@ class RepoDownloadManager:
 
 def main():
     try:
+        if args.d == True:
+            print("### DEBUG MODE ###")
         repoMngr = RepoDownloadManager(args.repository)
-        print(repoMngr.RepositoryUrl)
-        print(repoMngr.RepoName)
-        repoMngr.DownloadRelease(args.f)
+        if args.d == False:
+            repoMngr.DownloadRelease(args.f)
 
     except Exception as e:
         error(str(e))
