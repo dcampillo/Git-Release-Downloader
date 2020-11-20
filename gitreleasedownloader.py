@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Project: Git Release Downloader
 # File name: gitreleasedownloader.py
-# Description: Basic format for Python scripts
+# Description: Simple GitHub release downloader
 # Author: David Campillo
 # Date: 19-11-2020
 
