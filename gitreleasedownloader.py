@@ -20,10 +20,12 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description='Arguments get parsed via --commands')
     parser.add_argument('repository', help='Name of the target Git Repositoy')
     parser.add_argument('-v', metavar='verbosity', type=int, default=3,
-        help='Verbosity of logging: 0 -critical, 1- error, 2 -warning, 3 -info, 4 -debug')
-    parser.add_argument("-f", metavar="format", type=str, default='z', help='Format of the downloaded file : t = Tarball, z = Zip (default)')
-    parser.add_argument("-so", metavar="source-only", type=bool, default=True, help='Download only the source even if assets are available')
-    parser.add_argument("-d", metavar="debug", type=bool, default=False, help='Debug mode -> skip download the file')
+        help='Verbosity of logging: 0 -critical, 1- error, 2 -warning, 3 -info, 4 -debug', choices=[0, 1, 2, 3, 4])
+    parser.add_argument("-f", metavar="format", type=str, default='zip', help='Format of the downloaded file : t = Tarball, z = Zip (default)', choices=['zip', 'tar'])
+    parser.add_argument("-so", help='Download only the source even if assets are available', action='store_true')
+    parser.add_argument("-lo", help='Print source url and skip the download', action='store_true')
+    parser.add_argument("-d", help='Debug mode -> skip download the file', action='store_true')
+    parser.add_argument("-i", help='Displays information about the repos, Source URLs and assets', action='store_true')
 
     args = parser.parse_args()
     verbose = {0: logging.CRITICAL, 1: logging.ERROR, 2: logging.WARNING, 3: logging.INFO, 4: logging.DEBUG}
@@ -59,22 +61,26 @@ class RepoDownloadManager:
                 error("Unable to retrieve informaiton for repository " + self.RepoName)
                 exit()
         except Exception as e:
-            error("General error" + str(e))
+            critical("General error" + str(e))
+            exit()
 
     def __extract_repoinfo(self):
-        self.__sourceurls['z'] = self.__repoJson['zipball_url']
-        self.__sourceurls['t'] = self.__repoJson['tarball_url']
+        self.__sourceurls['zip'] = self.__repoJson['zipball_url']
+        self.__sourceurls['tar'] = self.__repoJson['tarball_url']
+        if self.__repoJson['assets']:
+            __assets = self.__repoJson['assets']
 
     def __get_fileextension(self, DownloadFormat):
         switcher={
-            "t":".tar.gz", 
-            "z":".zip"
+            "tar":".tar.gz", 
+            "zip":".zip"
         }
         return switcher.get(DownloadFormat, "Invalid file type format")
 
     def get_downloadSourceUrl(self, DownloadFormat):
         return self.__sourceurls.get(DownloadFormat)
 
+    
     def DownloadRelease(self, DownloadFormat):
 
         _fileExtension = self.__get_fileextension(DownloadFormat)
@@ -103,11 +109,27 @@ class RepoDownloadManager:
 
 def main():
     try:
+        repoMngr = RepoDownloadManager(args.repository)
+
+        if args.i:
+            print("Repository name:\t\t%s" % repoMngr.RepoName)
+            print("Repository URL:\t\t%s" % repoMngr.RepositoryUrl)
+            exit()
+            
+
+
         if args.d == True:
             print("### DEBUG MODE ###")
-        repoMngr = RepoDownloadManager(args.repository)
-        if args.d == False:
+
+        
+
+        print(repoMngr.RepoName)
+        print(repoMngr.RepositoryUrl)
+
+        if args.lo == False:
             repoMngr.DownloadRelease(args.f)
+        else:
+            print(repoMngr.get_downloadSourceUrl(args.f))
 
     except Exception as e:
         error(str(e))
