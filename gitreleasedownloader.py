@@ -22,6 +22,7 @@ def parse_arguments():
     parser.add_argument('-v', metavar='verbosity', type=int, default=3,
         help='Verbosity of logging: 0 -critical, 1- error, 2 -warning, 3 -info, 4 -debug')
     parser.add_argument("-f", metavar="format", type=str, default='z', help='Format of the downloaded file : t = Tarball, z = Zip (default)')
+    parser.add_argument("-so", metavar="source-only", type=bool, default=True, help='Download only the source even if assets are available')
     parser.add_argument("-d", metavar="debug", type=bool, default=False, help='Debug mode -> skip download the file')
 
     args = parser.parse_args()
@@ -36,11 +37,15 @@ class RepoDownloadManager:
     RepoName = ''
     RepositoryUrl = ''
     __repoJson = ''
+    __assets = []
+    __sourceurls = {}
+    
 
     def __init__(self, RepositoryName):
         self.RepoName = RepositoryName
         self.RepositoryUrl = 'https://api.github.com/repos/' + RepositoryName + '/releases/latest'
         self.__repoJson = self.__get_repoinfo(self.RepositoryUrl)
+        self.__extract_repoinfo()
 
     def __get_repoinfo(self, repo_url):
         try:
@@ -56,6 +61,9 @@ class RepoDownloadManager:
         except Exception as e:
             error("General error" + str(e))
 
+    def __extract_repoinfo(self):
+        self.__sourceurls['z'] = self.__repoJson['zipball_url']
+        self.__sourceurls['t'] = self.__repoJson['tarball_url']
 
     def __get_fileextension(self, DownloadFormat):
         switcher={
@@ -64,15 +72,8 @@ class RepoDownloadManager:
         }
         return switcher.get(DownloadFormat, "Invalid file type format")
 
-    def __get_downloadUrl(self, DownloadFormat):
-        
-        downloadUrl = ''
-
-        if args.f == 'z':
-            downloadUrl = self.__repoJson['zipball_url']
-        else:
-            downloadUrl = self.__repoJson['tarball_url']
-        return downloadUrl
+    def get_downloadSourceUrl(self, DownloadFormat):
+        return self.__sourceurls.get(DownloadFormat)
 
     def DownloadRelease(self, DownloadFormat):
 
@@ -80,9 +81,9 @@ class RepoDownloadManager:
 
         try:
             print('Downloading latest release!')
-            print(self.__get_downloadUrl(DownloadFormat))
+            print(self.__sourceurls[DownloadFormat])
 
-            response = requests.get(self.__get_downloadUrl(DownloadFormat), allow_redirects=True)
+            response = requests.get(self.__sourceurls[DownloadFormat], allow_redirects=True)
             
             if response.status_code != 200:
                 error("Unable to download file " + self.RepositoryUrl)
