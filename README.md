@@ -13,4 +13,3 @@ usage: gitreleasedownloader.py [-h] [-v verbosity] [-f format] [-d debug] reposi
 This scripts relies on the following python libraries:
 
 1. Requests
-2. Argparse
